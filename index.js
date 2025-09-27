@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 dotenv.config();
 const app = express();
@@ -49,6 +49,23 @@ async function run() {
             res.json(sessions);
 
         });
+        // Get sessions by id
+        app.get("/sessions/:id", async (req, res) => {
+            try {
+                const id = req.params.id;
+                if (!ObjectId.isValid(id)) {
+                    return res.status(400).json({ success: false, message: "Invalid session ID" });
+                }
+                const session = await sessionsCollection.findOne({ _id: new ObjectId(id) });
+                if (!session) {
+                    return res.status(404).json({ success: false, message: "Session not found" });
+                }
+                res.json(session);
+            } catch (err) {
+                res.status(500).json({ success: false, message: err.message });
+            }
+        });
+
 
         // // POST: Create a new study session
         app.post("/sessions", async (req, res) => {
