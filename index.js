@@ -78,6 +78,25 @@ async function run() {
             }
         });
 
+
+        // DELETE session by ID
+        app.delete("/sessions/:id", async (req, res) => {
+            try {
+                const id = req.params.id;
+
+                const result = await sessionsCollection.deleteOne({ _id: new ObjectId(id) });
+
+                if (result.deletedCount === 0) {
+                    return res.status(404).json({ message: "Session not found" });
+                }
+
+                res.send(result);
+            } catch (error) {
+                console.error("Error deleting session:", error);
+                res.status(500).json({ message: "Internal Server Error" });
+            }
+        });
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
