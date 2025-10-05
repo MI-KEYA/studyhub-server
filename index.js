@@ -2,8 +2,12 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+// const { default: Stripe } = require("stripe");
 
 dotenv.config();
+
+const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY)
+
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -96,6 +100,22 @@ async function run() {
                 res.status(500).json({ message: "Internal Server Error" });
             }
         });
+
+        app.post('/create-payment-intent', async (req, res) => {
+            const amountInCents = req.body.amountInCents
+            try {
+                const paymentIntent = await stripe.paymentIntents.create({
+                    amount: amountInCents,
+                    currency: 'usd',
+                    payment_method_types: ['card'],
+
+                })
+
+                res.json({ clientSecret: paymentIntent.client_secret });
+            } catch (error) {
+                res.status(500).json({ error: error.message })
+            }
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
